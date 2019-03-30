@@ -2,6 +2,7 @@ package live.bank;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -10,11 +11,13 @@ import java.util.Scanner;
 
 public class BankingApp {
 
+    public static final String ACCOUNTS_TXT = "accounts.txt";
     private static List<Account> accounts = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
 
-        incarcaConturi();
+//        incarcaConturi();
+        incarcaConturiNIO();
 
         afiseazaMeniu();
 
@@ -31,7 +34,8 @@ public class BankingApp {
                     afiseazaConturi();
                     break;
                 case 3:
-                    creeazaBackupConturi();
+//                    creeazaBackupConturi();
+                    creeazaBackupConturiNIO();
                     break;
                 default:
                     System.out.println("Please choose one of the displayed options");
@@ -43,9 +47,24 @@ public class BankingApp {
         System.out.println("Bye!");
     }
 
+    private static void creeazaBackupConturiNIO() throws IOException {
+        // am creat timestampul pentru numele fisierului de backup
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String dateString = now.format(formatter);
+        String backupFilename = "accounts-" + dateString + ".txt";
+
+        Path sursa = Paths.get(ACCOUNTS_TXT);
+        Path destinatie = Paths.get(backupFilename);
+
+        Files.copy(sursa, destinatie);
+
+        System.out.println("Am facut backup in fisierul " + backupFilename);
+    }
+
     private static void creeazaBackupConturi() throws IOException {
         // folosim un input stream pentru a citi fisierul pe care il vom copia
-        FileInputStream fis = new FileInputStream("accounts.txt");
+        FileInputStream fis = new FileInputStream(ACCOUNTS_TXT);
 
         // am creat timestampul pentru numele fisierului de backup
         LocalDateTime now = LocalDateTime.now();
@@ -76,14 +95,46 @@ public class BankingApp {
         System.out.println("Am facut backup in fisierul " + backupFilename);
     }
 
+    private static void incarcaConturiNIO() throws IOException {
+        // cream un obiect care reprezinta calea catre fisierul citit
+        Path caleaCatreFisier = Paths.get(ACCOUNTS_TXT);
+
+        List<String> accountLines = Files.readAllLines(caleaCatreFisier);
+
+        for (String accountsLine : accountLines) {
+            System.out.println(accountsLine);
+
+            //impartim linia pe coloane delimitate de virgula
+            String[] accountInfo = accountsLine.split(",");
+
+            //extragem campurile necesare din array
+            String owner = accountInfo[0];
+            BigDecimal balance = new BigDecimal(accountInfo[1]);
+
+            //cream o instante de account
+            Account account = new Account(owner, balance);
+
+            //adaugam instanta in lista de conturi folosita de aplicatie
+            accounts.add(account);
+        }
+
+    }
+
     private static void incarcaConturi() throws IOException {
 //        FileInputStream fis = null;
 //        Il vom folosi intr-un exemplu cu copiere de fisere unde putem citi byte cu byte
+
+        // try-with-resources
+//        try (BufferedReader reader = new BufferedReader(new FileReader(ACCOUNTS_TXT))) {
+            // do stuff
+//            reader.read();
+//        }
+
         BufferedReader reader = null; //definim
         try {
             //Cream legatura intre Java si fisier
 //            fis = new FileInputStream("accounts.txt");
-            reader = new BufferedReader(new FileReader("accounts.txt")); //atribuim
+            reader = new BufferedReader(new FileReader(ACCOUNTS_TXT)); //atribuim
 
             while (reader.ready()) {
                 //citim o linie din fisier
@@ -122,7 +173,7 @@ public class BankingApp {
         System.out.print("Please choose an option: ");
     }
 
-    private static void creeazaCont() {
+    private static void creeazaCont() throws IOException {
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("Specify the owner name: ");
@@ -134,13 +185,26 @@ public class BankingApp {
         Account account = new Account(owner, balance);
         accounts.add(account);
 
-        scrieContInFisier(account);
+//        scrieContInFisier(account);
+        scrieContInFisierNIO(account);
+    }
+
+    private static void scrieContInFisierNIO(Account account) throws IOException {
+        // cream un obiect care reprezinta calea catre fisier
+        Path caleaCatreFisier = Paths.get(ACCOUNTS_TXT);
+
+        // transformam obiectul Account in string (il serializam)
+        String accountString = account.getOwner() + "," + account.getBalance() + "\n";
+        System.out.println(accountString);
+
+        // scriem reprezentarea String a obiectului in fisier, adaugand la fisier (nu il suprascripem)
+        Files.write(caleaCatreFisier, accountString.getBytes(), StandardOpenOption.APPEND);
     }
 
     private static void scrieContInFisier(Account account) {
         FileOutputStream fos = null;
         try {
-            fos = new FileOutputStream("accounts.txt", true);
+            fos = new FileOutputStream(BankingApp.ACCOUNTS_TXT, true);
 
             String accountString = account.getOwner() + "," + account.getBalance() + "\n";
             System.out.println(accountString);
@@ -171,3 +235,4 @@ public class BankingApp {
         }
     }
 }
+

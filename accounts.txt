@@ -2,3 +2,4 @@ Emanuel,1000
 Maria,1234
 Elena,1234555
 Adrian,150.45
+Gigel,100
