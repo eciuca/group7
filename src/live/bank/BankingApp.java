@@ -2,7 +2,8 @@ package live.bank;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.sql.SQLOutput;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -27,17 +28,52 @@ public class BankingApp {
                     creeazaCont();
                     break;
                 case 2:
-                    afiseaszaConturi();
+                    afiseazaConturi();
                     break;
-                case 0:
-                    System.out.println("Bye!");
-                    return;
+                case 3:
+                    creeazaBackupConturi();
+                    break;
                 default:
                     System.out.println("Please choose one of the displayed options");
             }
             afiseazaMeniu();
             option = scanner.nextInt();
         }
+
+        System.out.println("Bye!");
+    }
+
+    private static void creeazaBackupConturi() throws IOException {
+        // folosim un input stream pentru a citi fisierul pe care il vom copia
+        FileInputStream fis = new FileInputStream("accounts.txt");
+
+        // am creat timestampul pentru numele fisierului de backup
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String dateString = now.format(formatter);
+        String backupFilename = "accounts-" + dateString + ".txt";
+
+        //folosim numele de fisier pentru
+        // a crea un nou fisier folosind numele creat anterior
+        FileOutputStream fos = new FileOutputStream(backupFilename);
+
+        //initializam variabila in care citim fiecare byte din fisier folosind
+        // FileInputStream
+        int data = fis.read();
+
+        // citim fiecare byte pana cand ajungem la sfarsitul fisierului
+        // (in acel moment metoda read() din FileInputStream va returna -1
+        do {
+            fos.write(data);
+            //citim urmatorul byte din sursa
+            data = fis.read();
+        } while (data != -1);
+
+        //inchidem cele doua streamuri pentru a elibera resursele sistemului
+        fis.close();
+        fos.close();
+
+        System.out.println("Am facut backup in fisierul " + backupFilename);
     }
 
     private static void incarcaConturi() throws IOException {
@@ -81,6 +117,7 @@ public class BankingApp {
     private static void afiseazaMeniu() {
         System.out.println("1. Add new account");
         System.out.println("2. List accounts");
+        System.out.println("3. Creeaza back-up lista conturi");
         System.out.println("0. Exit\n");
         System.out.print("Please choose an option: ");
     }
@@ -123,7 +160,7 @@ public class BankingApp {
         }
     }
 
-    private static void afiseaszaConturi() {
+    private static void afiseazaConturi() {
         System.out.println("The accounts list is: ");
         for (Account account : accounts) {
             System.out.println(account);
