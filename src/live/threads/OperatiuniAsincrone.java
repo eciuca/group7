@@ -53,6 +53,9 @@ public class OperatiuniAsincrone {
         // ii dam executorului al doilea task ca parametru
         executor.submit(verficaDisponiblitate); // new Thread(verficaDisponiblitate).start();
 
+        // inchidem executor service pentru a putea finaliza executia programului
+        executor.shutdown();
+
         String rezultat = stareaVremii.get();
         System.out.println(rezultat);
 
@@ -61,8 +64,6 @@ public class OperatiuniAsincrone {
         String rezultatDisponibilitate = verficaDisponiblitate.get();
         System.out.println(rezultatDisponibilitate);
 
-        // inchidem executor service pentru a putea finaliza executia programului
-        executor.shutdown();
 //        }
     }
 }

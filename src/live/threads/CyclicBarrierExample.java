@@ -14,12 +14,7 @@ public class CyclicBarrierExample {
         };
 
         // se va executa cand cele doua thread-uri vor ajunge la linia barrier2.await()
-        Runnable barrierAction2 = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Am ajuns la bariera 2");
-            }
-        };
+        Runnable barrierAction2 = () -> System.out.println("Am ajuns la bariera 2");
 
         CyclicBarrier barrier1 = new CyclicBarrier(2, barrierAction1);
         CyclicBarrier barrier2 = new CyclicBarrier(2, barrierAction2);
