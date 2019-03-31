@@ -1,13 +1,18 @@
 package rezolvate.threads.communication;
 
-import java.util.Scanner;
+import java.util.LinkedList;
+
+// Java program to implement solution of producer
+// consumer problem.
 
 public class ThreadExample {
     public static void main(String[] args)
             throws InterruptedException {
+        // Object of a class that has both produce()
+        // and consume() methods
         final PC pc = new PC();
 
-        // Create a thread object that calls pc.produce()
+        // Create producer thread
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -19,8 +24,7 @@ public class ThreadExample {
             }
         });
 
-        // Create another thread object that calls
-        // pc.consume()
+        // Create consumer thread
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -41,47 +45,64 @@ public class ThreadExample {
         t2.join();
     }
 
-    // PC (Produce Consumer) class with produce() and
-    // consume() methods.
+    // This class has a list, producer (adds items to list
+    // and consumber (removes items).
     public static class PC {
-        // Prints a string and waits for consume()
+        // Create a list shared by producer and consumer
+        // Size of list is 2.
+        LinkedList<Integer> list = new LinkedList<>();
+        int capacity = 2;
+
+        // Function called by producer thread
         public void produce() throws InterruptedException {
-            // synchronized block ensures only one thread
-            // running at a time.
-            synchronized (this) {
-                System.out.println("producer thread running");
+            int value = 0;
+            while (true) {
+                synchronized (this) {
+                    // producer thread waits while list
+                    // is full
+                    while (list.size() == capacity)
+                        wait();
 
-                // releases the lock on shared resource
-                wait();
+                    System.out.println("Producer produced-"
+                            + value);
 
-                // and waits till some other method invokes notify().
-                System.out.println("Resumed");
+                    // to insert the jobs in the list
+                    list.add(value++);
+
+                    // notifies the consumer thread that
+                    // now it can start consuming
+                    notify();
+
+                    // makes the working of program easier
+                    // to understand
+                    Thread.sleep(1000);
+                }
             }
         }
 
-        // Sleeps for some time and waits for a key press. After key
-        // is pressed, it notifies produce().
+        // Function called by consumer thread
         public void consume() throws InterruptedException {
-            // this makes the produce thread to run first.
-            Thread.sleep(1000);
-            Scanner s = new Scanner(System.in);
+            while (true) {
+                synchronized (this) {
+                    // consumer thread waits while list
+                    // is empty
+                    while (list.size() == 0)
+                        wait();
 
-            // synchronized block ensures only one thread
-            // running at a time.
-            synchronized (this) {
-                System.out.println("Waiting for return key.");
-                s.nextLine();
-                System.out.println("Return key pressed");
+                    //to retrive the ifrst job in the list
+                    int val = list.removeFirst();
 
-                // notifies the produce thread that it
-                // can wake up.
-                notify();
+                    System.out.println("Consumer consumed-"
+                            + val);
 
-                // Sleep
-                Thread.sleep(2000);
+                    // Wake up producer thread
+                    notify();
+
+                    // and sleep
+                    Thread.sleep(1000);
+                }
             }
         }
     }
 }
-
 
